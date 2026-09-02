@@ -52,21 +52,22 @@ class SerialCollector:
         discovered = []
         if list_ports:
             for p in list_ports.comports():
-                # Common USB serial chips: CH340, CP210x, FTDI, WitMotion USB
-                desc = f"{p.device} - {p.description} ({p.hwid})".lower()
-                if any(k in desc for k in ["usb", "ch340", "cp210", "ftdi", "witmotion", "ttyusb", "tty.usbserial"]):
+                dev_lower = p.device.lower()
+                desc_lower = f"{p.description} {p.hwid}".lower()
+                if any(k in dev_lower for k in ["ttyusb", "ttyacm", "usbserial", "wchusb"]) or \
+                   any(k in desc_lower for k in ["usb", "ch340", "cp210", "ftdi", "witmotion", "uart"]):
                     discovered.append(p.device)
 
-        if not discovered:
-            # Fallback glob search for Linux and macOS serial device nodes
-            patterns = [
-                "/dev/ttyUSB*",
-                "/dev/ttyACM*",
-                "/dev/tty.usbserial*",
-                "/dev/tty.wchusbserial*"
-            ]
-            for pat in patterns:
-                discovered.extend(glob.glob(pat))
+        # Fallback glob search for Linux and macOS serial device nodes
+        patterns = [
+            "/dev/ttyUSB*",
+            "/dev/ttyACM*",
+            "/dev/tty.usbserial*",
+            "/dev/tty.wchusbserial*",
+            "/dev/serial/by-id/*"
+        ]
+        for pat in patterns:
+            discovered.extend(glob.glob(pat))
 
         return list(dict.fromkeys(discovered))
 
@@ -83,7 +84,8 @@ class SerialCollector:
                 available_ports = self.find_wt901c_ports()
                 if available_ports:
                     port_to_open = available_ports[0]
-                    logger.info(f"Auto-detected sensor port: {port_to_open}")
+                    logger.info(f"Available serial ports discovered: {available_ports}")
+                    logger.info(f"Auto-selected sensor port: {port_to_open}")
                 else:
                     logger.warning("No USB serial port found for WT901C. Retrying in 3 seconds...")
                     time.sleep(3)

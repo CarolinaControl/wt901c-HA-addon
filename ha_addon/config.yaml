@@ -1,6 +1,6 @@
 name: "WT901C Vibration & Inclinometer Tracker"
 description: "High-performance 9-axis tilt, angle, and vibration tracker with Home Assistant MQTT Auto-Discovery and embedded Ingress dashboard panel."
-version: "1.0.1"
+version: "1.0.2"
 slug: "wt901c_tracker"
 init: false
 arch:
@@ -8,6 +8,7 @@ arch:
   - armv7
   - aarch64
   - amd64
+uart: true
 ingress: true
 ingress_port: 8501
 panel_title: "Vibration Tracker"
@@ -18,7 +19,9 @@ ports_description:
   8501/tcp: "Web Dashboard"
 devices:
   - /dev/ttyUSB0:/dev/ttyUSB0
+  - /dev/ttyUSB1:/dev/ttyUSB1
   - /dev/ttyACM0:/dev/ttyACM0
+  - /dev/ttyACM1:/dev/ttyACM1
 options:
   serial_port: "auto"
   baudrate: 115200
