@@ -135,17 +135,21 @@ class HomeAssistantMqttPublisher:
             return False
 
         try:
-            self.client = mqtt.Client(client_id="wt901c_ha_publisher")
+            if hasattr(mqtt, "CallbackAPIVersion"):
+                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, client_id="wt901c_ha_publisher")
+            else:
+                self.client = mqtt.Client(client_id="wt901c_ha_publisher")
+
             if self.user and self.password:
                 self.client.username_pw_set(self.user, self.password)
 
             def on_connect(client, userdata, flags, rc):
                 if rc == 0:
-                    logger.info(f"Connected to MQTT Broker at {self.host}:{self.port}")
+                    logger.info(f"✅ Connected to MQTT Broker at {self.host}:{self.port}")
                     self._connected = True
                     self.publish_discovery()
                 else:
-                    logger.error(f"MQTT connection failed with return code {rc}")
+                    logger.error(f"MQTT connection failed with return code {rc}. (Check MQTT username/password or Home Assistant Mosquitto addon status)")
 
             def on_disconnect(client, userdata, rc):
                 logger.warning(f"Disconnected from MQTT Broker (rc: {rc})")

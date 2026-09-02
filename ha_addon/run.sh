@@ -22,10 +22,16 @@ if [ -f "$CONFIG_PATH" ]; then
     PUBLISH_INTERVAL=$(jq --raw-output '.publish_interval_sec // 0.5' "$CONFIG_PATH")
 fi
 
+# Fallback to HA supervisor service credentials if option is empty
+if [ -z "$MQTT_USER" ] && [ -n "$CONFIG_SERVICES_MQTT_USER" ]; then
+    MQTT_USER="$CONFIG_SERVICES_MQTT_USER"
+    MQTT_PASSWORD="$CONFIG_SERVICES_MQTT_PASSWORD"
+fi
+
 echo "=========================================================="
 echo " Starting WT901C 9-Axis Tracker Add-on"
 echo " Serial Port : $SERIAL_PORT ($BAUDRATE baud)"
-echo " MQTT Broker : $MQTT_HOST:$MQTT_PORT"
+echo " MQTT Broker : $MQTT_HOST:$MQTT_PORT (User: ${MQTT_USER:-none})"
 echo " Ingress     : Enabled (Port 8501)"
 echo "=========================================================="
 

@@ -83,7 +83,9 @@ class SerialCollector:
             if not port_to_open:
                 available_ports = self.find_wt901c_ports()
                 if available_ports:
-                    port_to_open = available_ports[0]
+                    # Prefer CH340 / USB serial ports over Zigbee / Z-Wave dongles
+                    usb_ports = [p for p in available_ports if any(k in p.lower() for k in ["ttyusb", "ch340", "usbserial", "wchusb"])]
+                    port_to_open = usb_ports[0] if usb_ports else available_ports[0]
                     logger.info(f"Available serial ports discovered: {available_ports}")
                     logger.info(f"Auto-selected sensor port: {port_to_open}")
                 else:
@@ -91,22 +93,55 @@ class SerialCollector:
                     time.sleep(3)
                     continue
 
-            logger.info(f"Opening serial port {port_to_open} at {self.baudrate} baud...")
-            try:
-                ser = serial.Serial(
-                    port=port_to_open,
-                    baudrate=self.baudrate,
-                    timeout=0.5,
-                    bytesize=serial.EIGHTBITS,
-                    parity=serial.PARITY_NONE,
-                    stopbits=serial.STOPBITS_ONE
-                )
-            except Exception as e:
-                logger.error(f"Failed to open port {port_to_open}: {e}. Retrying in 3 seconds...")
+            # Auto baud rate scanner list: try target baudrate first, then 9600, 115200, 38400, 921600, 19200, 57600
+            bauds_to_scan = [self.baudrate] + [b for b in [9600, 115200, 38400, 921600, 19200, 57600] if b != self.baudrate]
+            active_ser = None
+
+            for try_baud in bauds_to_scan:
+                if not self.running:
+                    break
+
+                logger.info(f"Testing serial port {port_to_open} at {try_baud} baud...")
+                try:
+                    ser = serial.Serial(
+                        port=port_to_open,
+                        baudrate=try_baud,
+                        timeout=0.5,
+                        bytesize=serial.EIGHTBITS,
+                        parity=serial.PARITY_NONE,
+                        stopbits=serial.STOPBITS_ONE
+                    )
+                except Exception as e:
+                    logger.warning(f"Unable to open {port_to_open} at {try_baud} baud: {e}")
+                    continue
+
+                # Read for up to 3 seconds to verify valid WitMotion 0x55 frames
+                test_start = time.time()
+                valid_stream = False
+                while self.running and (time.time() - test_start < 3.0):
+                    data = ser.read(128)
+                    if data:
+                        pkts = self.parser.feed(data)
+                        if pkts:
+                            valid_stream = True
+                            logger.info(f"✅ Valid WT901C sensor stream verified at {try_baud} baud on {port_to_open}!")
+                            self.baudrate = try_baud
+                            active_ser = ser
+                            break
+
+                if valid_stream:
+                    break
+                else:
+                    logger.warning(f"No valid WT901C frames received on {port_to_open} at {try_baud} baud. Testing next baud rate...")
+                    ser.close()
+
+            if not active_ser or not active_ser.is_open:
+                logger.warning(f"Could not lock onto valid WT901C data stream on {port_to_open}. Re-scanning in 3 seconds...")
                 time.sleep(3)
                 continue
 
-            logger.info(f"Successfully connected to WT901C on {port_to_open}. Listening for data frames...")
+            ser = active_ser
+            logger.info(f"Successfully connected to WT901C on {port_to_open} ({self.baudrate} baud). Listening for data frames...")
             
             try:
                 while self.running:
