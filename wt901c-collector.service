@@ -1,0 +1,16 @@
+[Unit]
+Description=WT901C 9-Axis Vibration & Inclinometer Data Collector Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/vibration-tracker
+ExecStart=/home/pi/vibration-tracker/venv/bin/python3 /home/pi/vibration-tracker/collector.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/pi/vibration-tracker/data/collector.log
+StandardError=append:/home/pi/vibration-tracker/data/collector_error.log
+
+[Install]
+WantedBy=multi-user.target
