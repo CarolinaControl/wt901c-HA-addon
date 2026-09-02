@@ -58,4 +58,6 @@ exec streamlit run /app/dashboard.py \
     --server.port=8501 \
     --server.address=0.0.0.0 \
     --server.headless=true \
-    --server.allowRunOnSave=false
+    --server.allowRunOnSave=false \
+    --server.enableCORS=false \
+    --server.enableXsrfProtection=false
