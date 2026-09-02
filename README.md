@@ -18,10 +18,10 @@ A production-grade Python long-term data logging, storage, aggregation, and Home
 ## 🏡 Home Assistant Add-on Installation Guide
 
 ### Step 1: Add Custom Repository to Home Assistant
-1. Push this project folder to your GitHub repository (e.g. `https://github.com/YOUR_USERNAME/wt901c-addon`).
+1. Push this project folder to your GitHub repository (e.g. `https://github.com/CarolinaControl/wt901c-HA-addon`).
 2. Open Home Assistant -> Navigate to **Settings** -> **Add-ons** -> **Add-on Store**.
 3. Click the **3 dots (⋮)** in the top right corner -> **Repositories**.
-4. Paste your repository URL and click **Add**.
+4. Paste `https://github.com/CarolinaControl/wt901c-HA-addon` and click **Add**.
 
 ### Step 2: Install & Configure Add-on
 1. Plug your **WT901C USB Sensor** into your Home Assistant host device.
