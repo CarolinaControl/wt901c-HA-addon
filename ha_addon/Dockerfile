@@ -16,6 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
-RUN chmod +x /app/ha_addon/run.sh
+RUN chmod +x /app/run.sh
 
-CMD ["/app/ha_addon/run.sh"]
+CMD ["/app/run.sh"]
